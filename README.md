@@ -103,6 +103,7 @@ for proc in pslist.PsList.list_processes(...):
     else:
         if keyword not in proc_name.lower():
             continue
+```
 
 - `pslist`의 `list_processes` 함수로 EPROCESS 리스트 획득
 - 대소문자 무시 비교 수행
