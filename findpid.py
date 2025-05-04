@@ -4,6 +4,7 @@ from typing import Callable, Iterator
 
 from volatility3.framework import interfaces, renderers, exceptions
 from volatility3.framework.configuration import requirements
+from volatility3.framework.objects import utility
 from volatility3.plugins.windows import pslist
 
 vollog = logging.getLogger(__name__)
@@ -34,22 +35,14 @@ class FindPid(interfaces.plugins.PluginInterface):
     def create_name_filter(
         cls, keyword: str
     ) -> Callable[[interfaces.objects.ObjectInterface], bool]:
-        """
-        Returns a filter function that excludes processes whose name
-        does not contain the given keyword (case-insensitive).
-        Volatility's list_processes skips processes where filter_func returns True.
-        """
         lowered = keyword.lower()
 
         def filter_func(proc: interfaces.objects.ObjectInterface) -> bool:
             try:
-                name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
-                if lowered in name.lower():
-                    return False  # do not filter out (keep this process)
-                else:
-                    return True   # filter out
+                name = utility.array_to_string(proc.ImageFileName)
+                return lowered not in name.lower()
             except Exception:
-                return True  # filter out if name cannot be read
+                return True
 
         return filter_func
 
@@ -64,10 +57,10 @@ class FindPid(interfaces.plugins.PluginInterface):
             context=self.context,
             layer_name=layer_name,
             symbol_table=symbol_table,
-            filter_func=lambda _: False  # 필터 완전 해제
+            filter_func=filter_func
         ):
             try:
-                proc_name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
+                proc_name = utility.array_to_string(proc.ImageFileName)
                 pid = int(proc.UniqueProcessId)
                 create_time = proc.get_create_time()
 
