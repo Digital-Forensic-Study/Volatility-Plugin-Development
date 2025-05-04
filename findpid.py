@@ -50,19 +50,20 @@ class FindPid(interfaces.plugins.PluginInterface):
                     continue
 
                 pid = int(proc.UniqueProcessId)
-                ppid = int(proc.InheritedFromUniqueProcessId)
                 create_time = proc.get_create_time()
-                exit_time_obj = proc.get_exit_time()
 
-                if exit_time_obj == datetime.datetime.fromtimestamp(0):
+                try:
+                    exit_time_obj = proc.get_exit_time()
+                    if exit_time_obj and exit_time_obj.year > 1970:
+                        exit_time = exit_time_obj.strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        exit_time = "Running"
+                except Exception:
                     exit_time = "Running"
-                else:
-                    exit_time = exit_time_obj.strftime("%Y-%m-%d %H:%M:%S")
 
                 yield (0, (
                     proc_name,
                     pid,
-                    ppid,
                     create_time.strftime("%Y-%m-%d %H:%M:%S"),
                     exit_time
                 ))
@@ -73,10 +74,12 @@ class FindPid(interfaces.plugins.PluginInterface):
                 vollog.debug(f"Error reading process at {proc.vol.offset:#x}: {e}")
 
     def run(self):
-        return renderers.TreeGrid([
-            ("ImageFileName", str),
-            ("PID", int),
-            ("PPID", int),
-            ("CreateTime", str),
-            ("ExitTime", str),
-        ], self._generator())
+        return renderers.TreeGrid(
+            [
+                ("ImageFileName", str),
+                ("PID", int),
+                ("CreateTime", str),
+                ("ExitTime", str),
+            ],
+            self._generator(),
+        )
