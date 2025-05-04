@@ -1,3 +1,5 @@
+# 설명
+
 import datetime
 import logging
 from typing import Iterator
