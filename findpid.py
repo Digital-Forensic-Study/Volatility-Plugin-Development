@@ -1,4 +1,3 @@
-
 import datetime
 import logging
 from typing import Callable, Iterator
@@ -14,7 +13,7 @@ class FindPid(interfaces.plugins.PluginInterface):
     """Finds processes by partial name and shows PID, Create/Exit time."""
 
     _required_framework_version = (2, 0, 0)
-    _version = (1, 0, 0)
+    _version = (2, 0, 0)
 
     @classmethod
     def get_requirements(cls):
@@ -35,7 +34,6 @@ class FindPid(interfaces.plugins.PluginInterface):
     def create_name_contains_filter(
         cls, keyword: str
     ) -> Callable[[interfaces.objects.ObjectInterface], bool]:
-        """Returns a filter function that matches process name partially."""
         lowered = keyword.lower()
 
         def filter_func(proc: interfaces.objects.ObjectInterface) -> bool:
@@ -43,7 +41,7 @@ class FindPid(interfaces.plugins.PluginInterface):
                 name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
                 return lowered not in name.lower()
             except Exception:
-                return True  # filter out if name can't be read
+                return True
 
         return filter_func
 
