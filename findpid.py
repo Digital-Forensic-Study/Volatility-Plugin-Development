@@ -1,4 +1,5 @@
-from typing import Callable, Iterator
+from typing import Iterator
+import datetime
 
 from volatility3.framework import interfaces, renderers
 from volatility3.framework.configuration import requirements
@@ -39,12 +40,19 @@ class FindPid(interfaces.plugins.PluginInterface):
             try:
                 name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
                 if search_term in name.lower():
-                    yield (0, (name, int(proc.UniqueProcessId)))
-            except Exception as e:
+                    create_time = proc.get_create_time()
+                    exit_time = proc.get_exit_time()
+                    yield (0, (name, int(proc.UniqueProcessId), create_time, exit_time))
+            except Exception:
                 pass
 
     def run(self):
         return renderers.TreeGrid(
-            [("Process Name", str), ("PID", int)],
+            [
+                ("Process Name", str),
+                ("PID", int),
+                ("Create Time", datetime.datetime),
+                ("Exit Time", datetime.datetime)
+            ],
             self._generator()
         )
