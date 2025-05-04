@@ -136,7 +136,6 @@ yield (0, (
 ```
 
 - Volatility 3의 `TreeGrid` 출력 포맷: `(depth, (columns))`
-- 이전에는 이 포맷을 지키지 않아 출력이 되지 않음
 - `TreeGrid`를 통해 표 형태로 출력
 - `_generator()`에서 전달한 값과 정확히 일치해야 정상 출력됨
 
