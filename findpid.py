@@ -34,15 +34,22 @@ class FindPid(interfaces.plugins.PluginInterface):
     def create_name_filter(
         cls, keyword: str
     ) -> Callable[[interfaces.objects.ObjectInterface], bool]:
-        """Returns a filter function that filters out processes that do NOT match."""
+        """
+        Returns a filter function to filter out processes that do NOT contain the keyword.
+        Volatility expects the filter function to return True for items to be excluded.
+        So we return True if the process name does NOT contain the keyword.
+        """
         lowered = keyword.lower()
 
         def filter_func(proc: interfaces.objects.ObjectInterface) -> bool:
             try:
                 name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
-                return lowered not in name.lower()  # False일 때 통과
+                # ❗ return True to exclude, False to keep
+                # => exclude if the keyword is NOT in the name
+                return lowered not in name.lower()
             except Exception:
-                return True  # 오류나면 제외
+                # Exclude if name can't be read
+                return True
 
         return filter_func
 
@@ -51,19 +58,21 @@ class FindPid(interfaces.plugins.PluginInterface):
         layer_name = kernel.layer_name
         symbol_table = kernel.symbol_table_name
 
+        # Create the filter function from the provided --name string
         filter_func = self.create_name_filter(self.config["name"])
 
         for proc in pslist.PsList.list_processes(
             context=self.context,
             layer_name=layer_name,
             symbol_table=symbol_table,
-            filter_func=filter_func
+            filter_func=filter_func  # Only include processes that contain the keyword
         ):
             try:
                 proc_name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
                 pid = int(proc.UniqueProcessId)
                 create_time = proc.get_create_time()
 
+                # Format exit time: show "Running" if exit time is 0
                 exit_time_dt = proc.get_exit_time()
                 if exit_time_dt == datetime.datetime.fromtimestamp(0):
                     exit_time = "Running"
