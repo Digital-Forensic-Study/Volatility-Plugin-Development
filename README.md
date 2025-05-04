@@ -17,6 +17,8 @@ Windows 메모리 이미지에서 **부분 문자열 혹은 정확한 이름으�
     </ul>
 </ul>
 
+<br>
+
 ## 실행 예시
 
 ### 부분 일치
@@ -29,15 +31,20 @@ python vol.py -f <덤프파일> windows.findpid --name svch
 python vol.py -f <덤프 파일> windows.findpid --name svchost --exact
 ```
 
+<br>
+
 ## 기능 및 옵션
 
 - `--name`: 프로세스 이름(부분 포함 가능)
 - `--exact`: 정확히 일치하는 이름만 검색할 수 있도록 하는 옵션
-출력 항목: `ImageFileName`, `PID`, `CreateTime`, `ExitTime`
+
+<br>**출력 항목**: `ImageFileName`, `PID`, `CreateTime`, `ExitTime`
+
+<br>
 
 ## 코드 구조
 
-#### 1. Import 및 기본 설정
+### 1. Import 및 기본 설정
 
 ```python
 import datetime
@@ -50,10 +57,12 @@ from volatility3.framework.objects import utility
 from volatility3.plugins.windows import pslist
 ```
 
-- `pslist`의 EPROCESS 순회 로직을 그대로 재활용
+- `pslist`의 EPROCESS 순회 로직 활용
 - `utility.array_to_string()`으로 `ImageFileName` 추출
 
-#### 2. 플러그인 클래스 정의
+<br>
+
+### 2. 플러그인 클래스 정의
 
 ```python
 class FindPid(interfaces.plugins.PluginInterface):
@@ -63,7 +72,9 @@ class FindPid(interfaces.plugins.PluginInterface):
 
 - Volatility 3 플러그인으로 등록하기 위한 기본 상속 구조
 
-#### 3. 명령줄 옵션 정의
+<br>
+
+### 3. 명령줄 옵션 정의
 
 ```python
 @classmethod
@@ -78,7 +89,9 @@ def get_requirements(cls):
 - `--name`: 검색할 프로세스 이름 (필수)
 - `--exact`: 이름이 정확히 일치할 때만 출력 (옵션)
 
-#### 4. 프로세스 탐색 및 필터링 로직
+<br>
+
+### 4. 프로세스 탐색 및 필터링 로직
 
 ```python
 for proc in pslist.PsList.list_processes(...):
@@ -95,7 +108,9 @@ for proc in pslist.PsList.list_processes(...):
 - 대소문자 무시 비교 수행
 - `--exact` 여부에 따라 완전 일치 or 부분 포함 검색
 
-#### 5. 종료 시간 처리
+<br>
+
+### 5. 종료 시간 처리
 
 ```python
 exit_time_obj = proc.get_exit_time()
@@ -107,6 +122,8 @@ else:
 
 - 시스템 프로세스 등은 `ExitTime`이 0일 수 있음
 - Unix epoch 이전이면 종료되지 않은 것으로 판단
+
+<br>
 
 ### 6. 출력 구조
 
@@ -123,5 +140,7 @@ yield (0, (
 - 이전에는 이 포맷을 지키지 않아 출력이 되지 않음
 - `TreeGrid`를 통해 표 형태로 출력
 - `_generator()`에서 전달한 값과 정확히 일치해야 정상 출력됨
+
+<br>
 
 ---
