@@ -1,5 +1,3 @@
-# 설명
-
 import datetime
 import logging
 from typing import Iterator
@@ -13,7 +11,7 @@ vollog = logging.getLogger(__name__)
 
 
 class FindPid(interfaces.plugins.PluginInterface):
-    """Finds processes whose names contain a given substring and shows their PID and times."""
+    """Finds processes whose names contain a given substring or exact name and shows their PID and times."""
 
     _required_framework_version = (2, 0, 0)
     _version = (2, 0, 0)
@@ -28,8 +26,14 @@ class FindPid(interfaces.plugins.PluginInterface):
             ),
             requirements.StringRequirement(
                 name="name",
-                description="Partial name of the process to search for",
+                description="Process name or partial name to search for",
                 optional=False
+            ),
+            requirements.BooleanRequirement(
+                name="exact",
+                description="Search for exact name match instead of partial match",
+                default=False,
+                optional=True
             ),
         ]
 
@@ -39,6 +43,7 @@ class FindPid(interfaces.plugins.PluginInterface):
         symbol_table = kernel.symbol_table_name
 
         keyword = self.config["name"].lower()
+        exact_match = self.config.get("exact", False)
 
         for proc in pslist.PsList.list_processes(
             context=self.context,
@@ -48,8 +53,14 @@ class FindPid(interfaces.plugins.PluginInterface):
         ):
             try:
                 proc_name = utility.array_to_string(proc.ImageFileName)
-                if keyword not in proc_name.lower():
-                    continue
+                proc_name_lower = proc_name.lower()
+
+                if exact_match:
+                    if proc_name_lower != keyword:
+                        continue
+                else:
+                    if keyword not in proc_name_lower:
+                        continue
 
                 pid = int(proc.UniqueProcessId)
                 create_time = proc.get_create_time()
