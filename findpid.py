@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Callable, Iterator
+from typing import Iterator
 
 from volatility3.framework import interfaces, renderers, exceptions
 from volatility3.framework.configuration import requirements
@@ -31,36 +31,24 @@ class FindPid(interfaces.plugins.PluginInterface):
             ),
         ]
 
-    @classmethod
-    def create_name_filter(
-        cls, keyword: str
-    ) -> Callable[[interfaces.objects.ObjectInterface], bool]:
-        lowered = keyword.lower()
-
-        def filter_func(proc: interfaces.objects.ObjectInterface) -> bool:
-            try:
-                name = utility.array_to_string(proc.ImageFileName)
-                return lowered not in name.lower()
-            except Exception:
-                return True
-
-        return filter_func
-
     def _generator(self) -> Iterator:
         kernel = self.context.modules[self.config["kernel"]]
         layer_name = kernel.layer_name
         symbol_table = kernel.symbol_table_name
 
-        filter_func = self.create_name_filter(self.config["name"])
+        keyword = self.config["name"].lower()
 
         for proc in pslist.PsList.list_processes(
             context=self.context,
             layer_name=layer_name,
             symbol_table=symbol_table,
-            filter_func=filter_func
+            filter_func=lambda _: False  # 전체 출력
         ):
             try:
                 proc_name = utility.array_to_string(proc.ImageFileName)
+                if keyword not in proc_name.lower():
+                    continue  # 필터 통과 못 하면 제외
+
                 pid = int(proc.UniqueProcessId)
                 create_time = proc.get_create_time()
 
@@ -78,9 +66,9 @@ class FindPid(interfaces.plugins.PluginInterface):
                 ))
 
             except exceptions.InvalidAddressException:
-                vollog.debug(f"Invalid process found at: {proc.vol.offset:#x}. Skipping.")
+                vollog.debug(f"Invalid process at: {proc.vol.offset:#x}, skipping.")
             except Exception as e:
-                vollog.debug(f"Error processing process at: {proc.vol.offset:#x}: {e}")
+                vollog.debug(f"Error in process at {proc.vol.offset:#x}: {e}")
 
     def run(self):
         return renderers.TreeGrid(
