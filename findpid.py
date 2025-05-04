@@ -64,7 +64,7 @@ class FindPid(interfaces.plugins.PluginInterface):
             context=self.context,
             layer_name=layer_name,
             symbol_table=symbol_table,
-            filter_func=filter_func
+            filter_func=lambda _: False  # 필터 완전 해제
         ):
             try:
                 proc_name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
