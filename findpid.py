@@ -41,8 +41,19 @@ class FindPid(interfaces.plugins.PluginInterface):
                 name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
                 if search_term in name.lower():
                     create_time = proc.get_create_time()
-                    exit_time = proc.get_exit_time()
-                    yield (0, (name, int(proc.UniqueProcessId), create_time, exit_time))
+                    exit_time_dt = proc.get_exit_time()
+
+                    if exit_time_dt == datetime.datetime.fromtimestamp(0):
+                        exit_time = "Running"
+                    else:
+                        exit_time = exit_time_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+                    yield (0, (
+                        name,
+                        int(proc.UniqueProcessId),
+                        create_time.strftime("%Y-%m-%d %H:%M:%S"),
+                        exit_time
+                    ))
             except Exception:
                 pass
 
@@ -51,8 +62,8 @@ class FindPid(interfaces.plugins.PluginInterface):
             [
                 ("Process Name", str),
                 ("PID", int),
-                ("Create Time", datetime.datetime),
-                ("Exit Time", datetime.datetime)
+                ("Create Time", str),
+                ("Exit Time", str),
             ],
             self._generator()
         )
