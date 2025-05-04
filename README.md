@@ -10,19 +10,30 @@ Windows 메모리 이미지에서 **부분 문자열 혹은 정확한 이름으�
 <ul>
   <li>프로세스 이름 입력 시 해당 프로세스의 PID 출력(간편하게 찾기, 프로세스 이름만 알고있다면 구지 pslist, psscan등을 입력하여 찾을 필요없음)</li>
   <li>부분만 입력해도 전체 프로세스 이름과 pid 모두 출력</li>
-  <li>pslist 기반</li>
+  <li>pslist 로직 기반</li>
     <ul>
       <li>ps관련 플러그인들 중에서 가장 빠름</li>
       <li>악의적인 행위 탐지 목적이 아니므로 프로세스 은닉 기법등은 배제</li>
     </ul>
 </ul>
 
+## 실행 예시
+
+### 부분 일치
+```bash
+python vol.py -f <덤프파일> windows.findpid --name svch
+```
+
+### 정확 일치
+```bash
+python vol.py -f <덤프 파일> windows.findpid --name svchost --exact
+```
+
 ## 기능 및 옵션
 
 - `--name`: 프로세스 이름(부분 포함 가능)
 - `--exact`: 정확히 일치하는 이름만 검색할 수 있도록 하는 옵션
-- 출력 항목: `ImageFileName`, `PID`, `CreateTime`, `ExitTime`
-- `pslist` 플러그인의 로직을 기반으로 개발
+출력 항목: `ImageFileName`, `PID`, `CreateTime`, `ExitTime`
 
 ## 코드 구조
 
@@ -112,17 +123,5 @@ yield (0, (
 - 이전에는 이 포맷을 지키지 않아 출력이 되지 않음
 - `TreeGrid`를 통해 표 형태로 출력
 - `_generator()`에서 전달한 값과 정확히 일치해야 정상 출력됨
-
-## 실행 예시
-
-### 부분 일치
-```bash
-python vol.py -f <덤프파일> windows.findpid --name svch
-```
-
-### 정확 일치
-```bash
-python vol.py -f <덤프 파일> windows.findpid --name svchost --exact
-```
 
 ---
