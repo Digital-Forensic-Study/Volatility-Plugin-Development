@@ -31,17 +31,18 @@ class FindPid(interfaces.plugins.PluginInterface):
         ]
 
     @classmethod
-    def create_name_contains_filter(
+    def create_name_filter(
         cls, keyword: str
     ) -> Callable[[interfaces.objects.ObjectInterface], bool]:
+        """Returns a filter function that filters out processes that do NOT match."""
         lowered = keyword.lower()
 
         def filter_func(proc: interfaces.objects.ObjectInterface) -> bool:
             try:
                 name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
-                return lowered not in name.lower()
+                return lowered not in name.lower()  # False일 때 통과
             except Exception:
-                return True
+                return True  # 오류나면 제외
 
         return filter_func
 
@@ -50,13 +51,13 @@ class FindPid(interfaces.plugins.PluginInterface):
         layer_name = kernel.layer_name
         symbol_table = kernel.symbol_table_name
 
-        name_filter = self.create_name_contains_filter(self.config["name"])
+        filter_func = self.create_name_filter(self.config["name"])
 
         for proc in pslist.PsList.list_processes(
             context=self.context,
             layer_name=layer_name,
             symbol_table=symbol_table,
-            filter_func=name_filter
+            filter_func=filter_func
         ):
             try:
                 proc_name = proc.ImageFileName.cast("string", max_length=proc.ImageFileName.vol.count, errors="replace")
