@@ -1,9 +1,7 @@
 # Volatility-Plugin-Development
-Develop Volatility-plugin
-
-## 구현할 기능 정리
-memmep2.py: 멘맵 으로 프로세스 덤프 출력 간략화, 간편화(pid가 아닌 프로세스 이름으로 식별 후 덤프프)
-
+1 findpid.py
+<br>
+2 mmname.py: memmap의 프로세스 덤프 출력 간략화, 간편화(pid가 아닌 프로세스 이름으로 식별 후 덤프)
 
 # Volatility 3 Plugin - 1 "findpid.py"
 Windows 메모리 이미지에서 **부분 문자열 혹은 정확한 이름으로 프로세스를 찾고**, 해당 프로세스의 PID, 생성 및 종료 시간 정보를 출력하는 Volatility 3 플러그인을 개발(간단한 프로세스 탐지 도구)<br>
